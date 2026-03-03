@@ -4,8 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chiasly Portfolio</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="scripts.js" defer></script>
+  <style>
+    /* Reset & basic styling */
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body { font-family: Arial, sans-serif; background:#f8f8f8; color:#333; }
+    header { background-color:#222; color:white; padding:1rem; text-align:center; }
+    header h1 { margin-bottom:0.5rem; }
+    nav ul { list-style:none; display:flex; justify-content:center; gap:1rem; }
+    nav button { background:none; border:none; color:white; font-size:1rem; cursor:pointer; }
+    nav button.active { text-decoration:underline; }
+
+    /* Tabs content */
+    .tab-content { display:none; padding:1rem; }
+    .tab-content.active { display:block; }
+
+    /* Grid */
+    .grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; padding:1rem; }
+    .grid-item img { width:100%; height:auto; display:block; cursor:pointer; opacity:0; transition: opacity 0.6s ease-in; }
+    .grid-item img.loaded { opacity:1; }
+
+    /* Lightbox */
+    .lightbox { position:fixed; top:0; left:0; width:100%; height:100%; display:none; justify-content:center; align-items:center; background: rgba(0,0,0,0.8); z-index:1000; }
+    .lightbox img { max-width:90%; max-height:90%; }
+    .lightbox .close { position:absolute; top:20px; right:30px; font-size:2rem; color:white; cursor:pointer; }
+
+    /* Footer */
+    footer { text-align:right; padding:1rem; font-size:0.9rem; }
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -62,5 +87,62 @@
   <footer>
     <p>&copy; 2026 LQF Productions</p>
   </footer>
+
+  <script>
+    // Tabs switching
+    const tabs = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        tabContents.forEach(tc => tc.classList.toggle('active', tc.id === target));
+      });
+    });
+
+    // Fade-in images
+    const images = document.querySelectorAll('.grid-item img');
+    images.forEach(img => { img.addEventListener('load', () => img.classList.add('loaded')); });
+
+    // Lightbox functionality
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = lightbox.querySelector('.lightbox-img');
+    const closeBtn = lightbox.querySelector('.close');
+
+    document.querySelectorAll('.grid-item img').forEach(img => {
+      img.addEventListener('click', () => {
+        lightbox.style.display = 'flex';
+        lightboxImg.src = img.src;
+      });
+    });
+
+    closeBtn.addEventListener('click', () => { lightbox.style.display = 'none'; });
+    lightbox.addEventListener('click', e => { if(e.target === lightbox) lightbox.style.display='none'; });
+
+    // Infinite scroll (loads clones of first 16 images)
+    const photoGrid = document.getElementById('photo-grid');
+    const loading = document.getElementById('loading');
+    let loadingMore = false;
+    window.addEventListener('scroll', () => {
+      if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 && !loadingMore){
+        loadingMore = true;
+        loading.style.display='block';
+        setTimeout(() => {
+          const currentImages = Array.from(photoGrid.children).slice(0,16);
+          currentImages.forEach(imgDiv => {
+            const clone = imgDiv.cloneNode(true);
+            photoGrid.appendChild(clone);
+            const img = clone.querySelector('img');
+            img.classList.remove('loaded');
+            img.addEventListener('load', () => img.classList.add('loaded'));
+            img.src = img.src; // trigger load
+          });
+          loading.style.display='none';
+          loadingMore = false;
+        },1000);
+      }
+    });
+  </script>
 </body>
 </html>
